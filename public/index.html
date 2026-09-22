@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta name="description" content="Personal health endpoint monitor" />
+
+    <title>Health Monitor</title>
+
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+
+  <body>
+    <div class="app">
+      <!-- Sidebar -->
+
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-icon">
+            <span></span>
+          </div>
+
+          <div>
+            <h1>Health Monitor</h1>
+
+            <p>Personal uptime monitor</p>
+          </div>
+        </div>
+
+        <div class="sidebar-section">
+          <div class="sidebar-label">MONITORING</div>
+
+          <div class="sidebar-item active">
+            <span class="sidebar-dot"></span>
+
+            Endpoints
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <div class="server-status">
+            <span class="online-dot"></span>
+
+            <div>
+              <strong> Monitor running </strong>
+
+              <small> Server is active </small>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Main -->
+
+      <main class="main">
+        <!-- Header -->
+
+        <header class="header">
+          <div>
+            <div class="breadcrumb">Monitoring / Endpoints</div>
+
+            <h2>Health endpoints</h2>
+
+            <p>
+              Monitor your websites by periodically checking their health
+              endpoints.
+            </p>
+          </div>
+
+          <button id="addButton" class="primary-button">
+            <span>+</span>
+
+            Add endpoint
+          </button>
+        </header>
+
+        <!-- Stats -->
+
+        <section class="stats">
+          <div class="stat-card">
+            <div class="stat-icon total">#</div>
+
+            <div>
+              <span> Total endpoints </span>
+
+              <strong id="totalCount"> 0 </strong>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon up">✓</div>
+
+            <div>
+              <span> Healthy </span>
+
+              <strong id="upCount"> 0 </strong>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon down">!</div>
+
+            <div>
+              <span> Down </span>
+
+              <strong id="downCount"> 0 </strong>
+            </div>
+          </div>
+        </section>
+
+        <!-- Endpoint section -->
+
+        <section class="endpoint-section">
+          <div class="section-header">
+            <div>
+              <h3>Your endpoints</h3>
+
+              <p>Checks run automatically in the background.</p>
+            </div>
+
+            <button id="refreshButton" class="secondary-button">
+              ↻ Refresh
+            </button>
+          </div>
+
+          <div id="endpointList">
+            <div class="empty-state">
+              <div class="empty-icon">♥</div>
+
+              <h3>No endpoints yet</h3>
+
+              <p>Add your first health endpoint to start monitoring.</p>
+
+              <button id="emptyAddButton" class="primary-button">
+                Add endpoint
+              </button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Add endpoint modal -->
+
+    <div id="modal" class="modal hidden">
+      <div id="modalBackdrop" class="modal-backdrop"></div>
+
+      <div class="modal-card">
+        <div class="modal-header">
+          <div>
+            <h3>Add health endpoint</h3>
+
+            <p>Enter the URL your monitor should check.</p>
+          </div>
+
+          <button id="closeModal" class="close-button" aria-label="Close">
+            ×
+          </button>
+        </div>
+
+        <form id="monitorForm">
+          <div class="form-group">
+            <label for="url"> Health endpoint URL </label>
+
+            <input
+              id="url"
+              type="url"
+              placeholder="https://example.com/api/health"
+              autocomplete="off"
+              required
+            />
+
+            <small> Example: https://your-site.com/api/health </small>
+          </div>
+
+          <div class="form-group">
+            <label for="interval"> Check interval </label>
+
+            <select id="interval">
+              <option value="60">Every 1 minute</option>
+
+              <option value="300" selected>Every 5 minutes</option>
+
+              <option value="600">Every 10 minutes</option>
+
+              <option value="900">Every 15 minutes</option>
+
+              <option value="1800">Every 30 minutes</option>
+            </select>
+
+            <small> The server sends a GET request at this interval. </small>
+          </div>
+
+          <div id="formError" class="form-error hidden"></div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancelButton" class="secondary-button">
+              Cancel
+            </button>
+
+            <button type="submit" class="primary-button">
+              Start monitoring
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
