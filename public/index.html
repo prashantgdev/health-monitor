@@ -2,9 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <meta name="description" content="Personal health endpoint monitor" />
 
     <title>Health Monitor</title>
@@ -15,7 +13,6 @@
   <body>
     <div class="app">
       <!-- Sidebar -->
-
       <aside class="sidebar">
         <div class="brand">
           <div class="brand-icon">
@@ -24,7 +21,6 @@
 
           <div>
             <h1>Health Monitor</h1>
-
             <p>Personal uptime monitor</p>
           </div>
         </div>
@@ -34,7 +30,6 @@
 
           <div class="sidebar-item active">
             <span class="sidebar-dot"></span>
-
             Endpoints
           </div>
         </div>
@@ -44,19 +39,16 @@
             <span class="online-dot"></span>
 
             <div>
-              <strong> Monitor running </strong>
-
-              <small> Server is active </small>
+              <strong>Monitor running</strong>
+              <small>Server is active</small>
             </div>
           </div>
         </div>
       </aside>
 
       <!-- Main -->
-
       <main class="main">
         <!-- Header -->
-
         <header class="header">
           <div>
             <div class="breadcrumb">Monitoring / Endpoints</div>
@@ -71,21 +63,18 @@
 
           <button id="addButton" class="primary-button">
             <span>+</span>
-
             Add endpoint
           </button>
         </header>
 
         <!-- Stats -->
-
         <section class="stats">
           <div class="stat-card">
             <div class="stat-icon total">#</div>
 
             <div>
-              <span> Total endpoints </span>
-
-              <strong id="totalCount"> 0 </strong>
+              <span>Total endpoints</span>
+              <strong id="totalCount">0</strong>
             </div>
           </div>
 
@@ -93,9 +82,8 @@
             <div class="stat-icon up">✓</div>
 
             <div>
-              <span> Healthy </span>
-
-              <strong id="upCount"> 0 </strong>
+              <span>Healthy</span>
+              <strong id="upCount">0</strong>
             </div>
           </div>
 
@@ -103,15 +91,13 @@
             <div class="stat-icon down">!</div>
 
             <div>
-              <span> Down </span>
-
-              <strong id="downCount"> 0 </strong>
+              <span>Down</span>
+              <strong id="downCount">0</strong>
             </div>
           </div>
         </section>
 
         <!-- Endpoint section -->
-
         <section class="endpoint-section">
           <div class="section-header">
             <div>
@@ -143,7 +129,6 @@
     </div>
 
     <!-- Add endpoint modal -->
-
     <div id="modal" class="modal hidden">
       <div id="modalBackdrop" class="modal-backdrop"></div>
 
@@ -161,6 +146,7 @@
         </div>
 
         <form id="monitorForm">
+          <!-- URL -->
           <div class="form-group">
             <label for="url"> Health endpoint URL </label>
 
@@ -171,32 +157,56 @@
               autocomplete="off"
             />
           </div>
-          
+
+          <!-- Interval -->
           <div class="form-group">
-            <label for="interval">Check interval</label>
+            <label> Check interval </label>
 
-            <select id="interval">
-              <option value="60">Every 1 minute</option>
-              <option value="300" selected>Every 5 minutes</option>
-              <option value="600">Every 10 minutes</option>
-              <option value="900">Every 15 minutes</option>
-              <option value="1800">Every 30 minutes</option>
-              <option value="custom">Custom</option>
-            </select>
+            <div class="interval-picker">
+              <div class="interval-value">
+                <strong id="intervalDisplay"> 5 minutes </strong>
 
-            <div id="customInterval" class="custom-interval hidden">
+                <span> How often should we check? </span>
+              </div>
+
               <input
-                id="customIntervalValue"
-                type="number"
-                min="1"
+                id="intervalSlider"
+                class="interval-slider"
+                type="range"
+                min="0"
+                max="8"
                 step="1"
-                placeholder="Enter number"
+                value="3"
               />
 
-              <select id="customIntervalUnit">
-                <option value="seconds">Seconds</option>
-                <option value="minutes">Minutes</option>
-              </select>
+              <div class="interval-labels">
+                <span>15s</span>
+                <span>30s</span>
+                <span>1m</span>
+                <span>5m</span>
+                <span>10m</span>
+                <span>15m</span>
+                <span>30m</span>
+                <span>1h</span>
+                <span>Custom</span>
+              </div>
+
+              <!-- Custom values -->
+              <div id="customInterval" class="custom-interval hidden">
+                <input
+                  id="customIntervalValue"
+                  type="number"
+                  min="1"
+                  step="1"
+                  placeholder="Enter time"
+                />
+
+                <select id="customIntervalUnit">
+                  <option value="seconds" selected>Seconds</option>
+                  <option value="minutes">Minutes</option>
+                  <option value="hours">Hours</option>
+                </select>
+              </div>
             </div>
           </div>
 

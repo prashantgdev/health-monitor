@@ -1,56 +1,80 @@
-const endpointList = document.getElementById("endpointList");
+const endpointList = document.getElementById("endpointList"),
+  totalCount = document.getElementById("totalCount"),
+  upCount = document.getElementById("upCount"),
+  downCount = document.getElementById("downCount"),
+  modal = document.getElementById("modal"),
+  addButton = document.getElementById("addButton"),
+  emptyAddButton = document.getElementById("emptyAddButton"),
+  closeModal = document.getElementById("closeModal"),
+  cancelButton = document.getElementById("cancelButton"),
+  modalBackdrop = document.getElementById("modalBackdrop"),
+  monitorForm = document.getElementById("monitorForm"),
+  urlInput = document.getElementById("url"),
+  formError = document.getElementById("formError"),
+  refreshButton = document.getElementById("refreshButton");
 
-const totalCount = document.getElementById("totalCount");
+// ---------------------------------------------------------
+// Interval picker
+// --------------------------------------------------------
+((intervalSlider = document.getElementById("intervalSlider")),
+  (intervalDisplay = document.getElementById("intervalDisplay")),
+  (customInterval = document.getElementById("customInterval")),
+  (customIntervalValue = document.getElementById("customIntervalValue")),
+  (customIntervalUnit = document.getElementById("customIntervalUnit")),
+  // Slider positions
+  (intervalOptions = [
+    {
+      seconds: 15,
+      label: "15 seconds",
+    },
 
-const upCount = document.getElementById("upCount");
+    {
+      seconds: 30,
+      label: "30 seconds",
+    },
 
-const downCount = document.getElementById("downCount");
+    {
+      seconds: 60,
+      label: "1 minute",
+    },
 
-const modal = document.getElementById("modal");
+    {
+      seconds: 300,
+      label: "5 minutes",
+    },
 
-const addButton = document.getElementById("addButton");
+    {
+      seconds: 600,
+      label: "10 minutes",
+    },
 
-const emptyAddButton = document.getElementById("emptyAddButton");
+    {
+      seconds: 900,
+      label: "15 minutes",
+    },
 
-const closeModal = document.getElementById("closeModal");
+    {
+      seconds: 1800,
+      label: "30 minutes",
+    },
 
-const cancelButton = document.getElementById("cancelButton");
+    {
+      seconds: 3600,
+      label: "1 hour",
+    },
 
-const modalBackdrop = document.getElementById("modalBackdrop");
+    {
+      custom: true,
+      label: "Custom",
+    },
+  ]));
 
-const monitorForm = document.getElementById("monitorForm");
+// Hidden value submitted to server
+let selectedInterval = 300;
 
-const urlInput = document.getElementById("url");
-
-const intervalInput = document.getElementById("interval");
-
-const formError = document.getElementById("formError");
-
-const refreshButton = document.getElementById("refreshButton");
-
-const customInterval = document.getElementById("customInterval");
-
-const customIntervalValue = document.getElementById("customIntervalValue");
-
-const customIntervalUnit = document.getElementById("customIntervalUnit");
-
-intervalInput.addEventListener("change", () => {
-  const isCustom = intervalInput.value === "custom";
-
-  customInterval.classList.toggle("hidden", !isCustom);
-
-  if (isCustom) {
-    setTimeout(() => {
-      customIntervalValue.focus();
-    }, 50);
-  }
-});
-
-/*
-|--------------------------------------------------------------------------
-| Modal
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Modal
+// ---------------------------------------------------------
 
 function openModal() {
   modal.classList.remove("hidden");
@@ -60,43 +84,97 @@ function openModal() {
   }, 50);
 }
 
-// function closeModalWindow() {
-//   modal.classList.add("hidden");
-
-//   monitorForm.reset();
-
-//   formError.classList.add("hidden");
-
-//   formError.textContent = "";
-// }
 function closeModalWindow() {
   modal.classList.add("hidden");
-
   monitorForm.reset();
-
   customInterval.classList.add("hidden");
+
   customIntervalValue.value = "";
   customIntervalUnit.value = "minutes";
+  intervalSlider.value = 3;
+  selectedInterval = 300;
 
+  updateIntervalSlider();
   formError.classList.add("hidden");
+
   formError.textContent = "";
 }
 
 addButton.addEventListener("click", openModal);
-
 emptyAddButton.addEventListener("click", openModal);
-
 closeModal.addEventListener("click", closeModalWindow);
-
 cancelButton.addEventListener("click", closeModalWindow);
-
 modalBackdrop.addEventListener("click", closeModalWindow);
 
-/*
-|--------------------------------------------------------------------------
-| Helpers
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Interval slider
+// ---------------------------------------------------------
+
+function updateIntervalSlider() {
+  const index = Number(intervalSlider.value),
+    option = intervalOptions[index],
+    progress = (index / (intervalOptions.length - 1)) * 100;
+
+  intervalSlider.style.setProperty("--slider-progress", `${progress}%`);
+
+  if (option.custom) {
+    intervalDisplay.textContent = "Custom interval";
+
+    customInterval.classList.remove("hidden");
+
+    return;
+  }
+
+  customInterval.classList.add("hidden");
+
+  selectedInterval = option.seconds;
+  intervalDisplay.textContent = option.label;
+}
+
+intervalSlider.addEventListener("input", updateIntervalSlider);
+
+// ---------------------------------------------------------
+// Custom interval
+// ---------------------------------------------------------
+
+function getCustomIntervalSeconds() {
+  const value = Number(customIntervalValue.value);
+
+  if (!Number.isInteger(value) || value < 1) return null;
+  if (customIntervalUnit.value === "seconds") return value;
+  if (customIntervalUnit.value === "minutes") return value * 60;
+  if (customIntervalUnit.value === "hours") return value * 3600;
+
+  return null;
+}
+
+customIntervalValue.addEventListener("input", () => {
+  const value = getCustomIntervalSeconds();
+
+  if (value !== null) {
+    selectedInterval = value;
+    intervalDisplay.textContent = formatInterval(value);
+  }
+});
+
+customIntervalUnit.addEventListener("change", () => {
+  // Seconds require a minimum of 10.
+  // Minutes and hours can start from 1.
+  if (customIntervalUnit.value === "seconds") customIntervalValue.min = "10";
+  else customIntervalValue.min = "1";
+
+  const value = getCustomIntervalSeconds();
+
+  if (value !== null) {
+    selectedInterval = value;
+
+    intervalDisplay.textContent = formatInterval(value);
+  }
+});
+
+// ---------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------
 
 function escapeHtml(value) {
   return String(value)
@@ -108,140 +186,107 @@ function escapeHtml(value) {
 }
 
 function formatInterval(seconds) {
-  if (seconds < 60) {
-    return `Every ${seconds} seconds`;
+  if (seconds < 60) return `Every ${seconds} seconds`;
+
+  if (seconds < 3600) {
+    const minutes = seconds / 60;
+
+    if (minutes === 1) return "Every 1 minute";
+
+    return `Every ${minutes} minutes`;
   }
 
-  const minutes = seconds / 60;
+  const hours = seconds / 3600;
 
-  if (minutes === 1) {
-    return "Every 1 minute";
-  }
+  if (hours === 1) return "Every 1 hour";
 
-  return `Every ${minutes} minutes`;
+  return `Every ${hours} hours`;
 }
 
 function formatDate(date) {
-  if (!date) {
-    return "Never";
-  }
+  if (!date) return "Never";
 
   return new Date(date).toLocaleString();
 }
 
 function formatResponseTime(ms) {
-  if (ms === null || ms === undefined) {
-    return "-";
-  }
+  if (ms === null || ms === undefined) return "-";
 
   return `${ms} ms`;
 }
 
 function getStatusText(status) {
-  if (status === "up") {
-    return "Healthy";
-  }
-
-  if (status === "down") {
-    return "Down";
-  }
+  if (status === "up") return "Healthy";
+  if (status === "down") return "Down";
 
   return "Checking";
 }
 
-/*
-|--------------------------------------------------------------------------
-| Load monitors
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Load monitors
+// ---------------------------------------------------------
 
 async function loadMonitors() {
   try {
     const response = await fetch("/api/monitors");
 
-    if (!response.ok) {
-      throw new Error();
-    }
+    if (!response.ok) throw new Error();
 
     const monitors = await response.json();
 
     renderStats(monitors);
-
     renderMonitors(monitors);
   } catch {
-    endpointList.innerHTML = `
-      <div class="empty-state">
-
-        <div class="empty-icon">
-          !
-        </div>
-
+    endpointList.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">!</div>
         <h3>
           Unable to load monitors
         </h3>
-
         <p>
           The monitor server may be unavailable.
         </p>
-
-      </div>
-    `;
+      </div>`;
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Stats
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Stats
+// ---------------------------------------------------------
 
 function renderStats(monitors) {
-  const total = monitors.length;
-
-  const up = monitors.filter((monitor) => monitor.status === "up").length;
-
-  const down = monitors.filter((monitor) => monitor.status === "down").length;
+  const total = monitors.length,
+    up = monitors.filter((monitor) => monitor.status === "up").length,
+    down = monitors.filter((monitor) => monitor.status === "down").length;
 
   totalCount.textContent = total;
-
   upCount.textContent = up;
-
   downCount.textContent = down;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Render monitor list
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Render monitors
+// ---------------------------------------------------------
 
 function renderMonitors(monitors) {
   if (monitors.length === 0) {
-    endpointList.innerHTML = `
-      <div class="empty-state">
-
+    endpointList.innerHTML = `<div class="empty-state">
         <div class="empty-icon">
           ♥
         </div>
-
         <h3>
           No endpoints yet
         </h3>
-
         <p>
           Add your first health endpoint
           to start monitoring.
         </p>
-
         <button
           class="primary-button"
           onclick="openModal()"
         >
           Add endpoint
         </button>
-
-      </div>
-    `;
+      </div>`;
 
     return;
   }
@@ -249,11 +294,9 @@ function renderMonitors(monitors) {
   endpointList.innerHTML = monitors.map(createMonitorHtml).join("");
 }
 
-/*
-|--------------------------------------------------------------------------
-| Monitor card
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Monitor card
+// ---------------------------------------------------------
 
 function createMonitorHtml(monitor) {
   const status =
@@ -274,9 +317,7 @@ function createMonitorHtml(monitor) {
       <div class="monitor-main">
 
         <div class="monitor-url">
-
           ${escapeHtml(monitor.url)}
-
         </div>
 
 
@@ -325,39 +366,14 @@ function createMonitorHtml(monitor) {
   `;
 }
 
-/*
-|--------------------------------------------------------------------------
-| Add monitor
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Add monitor
+// ---------------------------------------------------------
 
 monitorForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
   const url = urlInput.value.trim();
-
-  // const interval = Number(intervalInput.value);
-  let interval;
-
-  if (intervalInput.value === "custom") {
-    const value = Number(customIntervalValue.value);
-
-    if (!Number.isInteger(value) || value < 1) {
-      showFormError("Please enter a valid custom interval.");
-
-      return;
-    }
-
-    interval = customIntervalUnit.value === "minutes" ? value * 60 : value;
-
-    if (interval < 10) {
-      showFormError("Custom interval must be at least 10 seconds.");
-
-      return;
-    }
-  } else {
-    interval = Number(intervalInput.value);
-  }
 
   formError.classList.add("hidden");
 
@@ -374,6 +390,27 @@ monitorForm.addEventListener("submit", async (event) => {
 
     return;
   }
+
+  let interval;
+
+  const sliderIndex = Number(intervalSlider.value),
+   selectedOption = intervalOptions[sliderIndex];
+
+  if (selectedOption.custom) {
+    interval = getCustomIntervalSeconds();
+
+    if (interval === null) {
+      showFormError("Please enter a valid custom interval.");
+
+      return;
+    }
+
+    if (interval < 10) {
+      showFormError("Custom interval must be at least 10 seconds.");
+
+      return;
+    }
+  } else interval = selectedOption.seconds;
 
   try {
     const response = await fetch("/api/monitors", {
@@ -411,27 +448,21 @@ function showFormError(message) {
   formError.classList.remove("hidden");
 }
 
-/*
-|--------------------------------------------------------------------------
-| Delete monitor
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Delete monitor
+// ---------------------------------------------------------
 
 async function deleteMonitor(id) {
   const confirmed = confirm("Remove this endpoint from monitoring?");
 
-  if (!confirmed) {
-    return;
-  }
+  if (!confirmed) return;
 
   try {
     const response = await fetch(`/api/monitors/${id}`, {
       method: "DELETE",
     });
 
-    if (!response.ok) {
-      throw new Error();
-    }
+    if (!response.ok) throw new Error();
 
     await loadMonitors();
   } catch {
@@ -439,38 +470,27 @@ async function deleteMonitor(id) {
   }
 }
 
-/*
-|--------------------------------------------------------------------------
-| Refresh
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Refresh
+// ---------------------------------------------------------
 
 refreshButton.addEventListener("click", async () => {
   refreshButton.disabled = true;
-
   refreshButton.textContent = "Refreshing...";
 
   await loadMonitors();
 
   refreshButton.disabled = false;
-
   refreshButton.textContent = "↻ Refresh";
 });
 
-/*
-|--------------------------------------------------------------------------
-| Initial load
-|--------------------------------------------------------------------------
-*/
+// ---------------------------------------------------------
+// Initial load
+// ---------------------------------------------------------
 
+updateIntervalSlider();
 loadMonitors();
 
-/*
- * Refresh the dashboard every 5 seconds.
- *
- * This only refreshes the UI.
- * The actual health checks are performed
- * by server.js.
- */
+// Refresh dashboard every 5 seconds.
 
 setInterval(loadMonitors, 5000);
