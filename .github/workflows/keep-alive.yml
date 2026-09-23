@@ -1,0 +1,37 @@
+name: Keep App Alive
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check app health endpoint
+        run: |
+          URL="https://health-monitor-s08a.onrender.com/api/health"
+
+          echo "Checking: $URL"
+
+          HTTP_STATUS=$(curl \
+            --silent \
+            --output /tmp/response.json \
+            --write-out "%{http_code}" \
+            --max-time 30 \
+            "$URL")
+
+          echo "HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 300 ]; then
+            echo "✅ UP - App is healthy"
+            echo "Response:"
+            cat /tmp/response.json
+          else
+            echo "❌ DOWN - App returned HTTP $HTTP_STATUS"
+            echo "Response:"
+            cat /tmp/response.json || true
+            exit 1
+          fi
