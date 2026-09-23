@@ -28,6 +28,24 @@ const formError = document.getElementById("formError");
 
 const refreshButton = document.getElementById("refreshButton");
 
+const customInterval = document.getElementById("customInterval");
+
+const customIntervalValue = document.getElementById("customIntervalValue");
+
+const customIntervalUnit = document.getElementById("customIntervalUnit");
+
+intervalInput.addEventListener("change", () => {
+  const isCustom = intervalInput.value === "custom";
+
+  customInterval.classList.toggle("hidden", !isCustom);
+
+  if (isCustom) {
+    setTimeout(() => {
+      customIntervalValue.focus();
+    }, 50);
+  }
+});
+
 /*
 |--------------------------------------------------------------------------
 | Modal
@@ -42,13 +60,25 @@ function openModal() {
   }, 50);
 }
 
+// function closeModalWindow() {
+//   modal.classList.add("hidden");
+
+//   monitorForm.reset();
+
+//   formError.classList.add("hidden");
+
+//   formError.textContent = "";
+// }
 function closeModalWindow() {
   modal.classList.add("hidden");
 
   monitorForm.reset();
 
-  formError.classList.add("hidden");
+  customInterval.classList.add("hidden");
+  customIntervalValue.value = "";
+  customIntervalUnit.value = "minutes";
 
+  formError.classList.add("hidden");
   formError.textContent = "";
 }
 
@@ -306,7 +336,28 @@ monitorForm.addEventListener("submit", async (event) => {
 
   const url = urlInput.value.trim();
 
-  const interval = Number(intervalInput.value);
+  // const interval = Number(intervalInput.value);
+  let interval;
+
+  if (intervalInput.value === "custom") {
+    const value = Number(customIntervalValue.value);
+
+    if (!Number.isInteger(value) || value < 1) {
+      showFormError("Please enter a valid custom interval.");
+
+      return;
+    }
+
+    interval = customIntervalUnit.value === "minutes" ? value * 60 : value;
+
+    if (interval < 10) {
+      showFormError("Custom interval must be at least 10 seconds.");
+
+      return;
+    }
+  } else {
+    interval = Number(intervalInput.value);
+  }
 
   formError.classList.add("hidden");
 

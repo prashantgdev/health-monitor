@@ -169,28 +169,35 @@
               type="url"
               placeholder="https://example.com/api/health"
               autocomplete="off"
-              required
             />
-
-            <small> Example: https://your-site.com/api/health </small>
           </div>
-
+          
           <div class="form-group">
-            <label for="interval"> Check interval </label>
+            <label for="interval">Check interval</label>
 
             <select id="interval">
               <option value="60">Every 1 minute</option>
-
               <option value="300" selected>Every 5 minutes</option>
-
               <option value="600">Every 10 minutes</option>
-
               <option value="900">Every 15 minutes</option>
-
               <option value="1800">Every 30 minutes</option>
+              <option value="custom">Custom</option>
             </select>
 
-            <small> The server sends a GET request at this interval. </small>
+            <div id="customInterval" class="custom-interval hidden">
+              <input
+                id="customIntervalValue"
+                type="number"
+                min="1"
+                step="1"
+                placeholder="Enter number"
+              />
+
+              <select id="customIntervalUnit">
+                <option value="seconds">Seconds</option>
+                <option value="minutes">Minutes</option>
+              </select>
+            </div>
           </div>
 
           <div id="formError" class="form-error hidden"></div>
