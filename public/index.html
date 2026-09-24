@@ -146,6 +146,18 @@
         </div>
 
         <form id="monitorForm">
+          <!-- Title -->
+          <div class="form-group">
+            <label for="title"> Title </label>
+
+            <input
+              id="title"
+              type="text"
+              placeholder="e.g. Production API"
+              maxlength="100"
+            />
+          </div>
+
           <!-- URL -->
           <div class="form-group">
             <label for="url"> Health endpoint URL </label>
@@ -153,7 +165,7 @@
             <input
               id="url"
               type="url"
-              placeholder="https://example.com/api/health"
+              placeholder="e.g. https://example.com/api/health"
               autocomplete="off"
             />
           </div>

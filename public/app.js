@@ -9,20 +9,20 @@ const endpointList = document.getElementById("endpointList"),
   cancelButton = document.getElementById("cancelButton"),
   modalBackdrop = document.getElementById("modalBackdrop"),
   monitorForm = document.getElementById("monitorForm"),
+  titleInput = document.getElementById("title"),
   urlInput = document.getElementById("url"),
   formError = document.getElementById("formError"),
-  refreshButton = document.getElementById("refreshButton");
-
-// ---------------------------------------------------------
-// Interval picker
-// --------------------------------------------------------
-((intervalSlider = document.getElementById("intervalSlider")),
-  (intervalDisplay = document.getElementById("intervalDisplay")),
-  (customInterval = document.getElementById("customInterval")),
-  (customIntervalValue = document.getElementById("customIntervalValue")),
-  (customIntervalUnit = document.getElementById("customIntervalUnit")),
+  refreshButton = document.getElementById("refreshButton"),
+  // ---------------------------------------------------------
+  // Interval picker
+  // --------------------------------------------------------
+  intervalSlider = document.getElementById("intervalSlider"),
+  intervalDisplay = document.getElementById("intervalDisplay"),
+  customInterval = document.getElementById("customInterval"),
+  customIntervalValue = document.getElementById("customIntervalValue"),
+  customIntervalUnit = document.getElementById("customIntervalUnit"),
   // Slider positions
-  (intervalOptions = [
+  intervalOptions = [
     {
       seconds: 15,
       label: "15 seconds",
@@ -67,7 +67,7 @@ const endpointList = document.getElementById("endpointList"),
       custom: true,
       label: "Custom",
     },
-  ]));
+  ];
 
 // Hidden value submitted to server
 let selectedInterval = 300;
@@ -316,32 +316,39 @@ function createMonitorHtml(monitor) {
 
       <div class="monitor-main">
 
-        <div class="monitor-url">
-          ${escapeHtml(monitor.url)}
-        </div>
+        <div class="monitor-data">
 
+          <h3 class="monitor-title">
+            ${escapeHtml(monitor.title)}
+          </h3>
+
+          <small class="monitor-url">
+            ${escapeHtml(monitor.url)}
+          </small>
+
+        </div>
+        
 
         <div class="monitor-meta">
-
-          <span>
-            HTTP:
-            ${monitor.statusCode ?? "-"}
-          </span>
-
-          <span>
-            Response:
-            ${formatResponseTime(monitor.responseTime)}
-          </span>
-
-          <span>
-            ${formatInterval(monitor.interval)}
-          </span>
-
-          <span>
-            Last checked:
-            ${formatDate(monitor.lastChecked)}
-          </span>
-
+          <div>
+            <span>
+              HTTP:
+              ${monitor.statusCode ?? "-"}
+            </span>
+            <span>
+              Response:
+              ${formatResponseTime(monitor.responseTime)}
+            </span>
+          </div>
+          <div>
+            <span>
+              ${formatInterval(monitor.interval)}
+            </span>
+            <span>
+              Last checked:
+              ${formatDate(monitor.lastChecked)}
+            </span>
+          </div>
         </div>
 
       </div>
@@ -373,9 +380,16 @@ function createMonitorHtml(monitor) {
 monitorForm.addEventListener("submit", async (event) => {
   event.preventDefault();
 
-  const url = urlInput.value.trim();
+  const title = titleInput.value.trim(),
+    url = urlInput.value.trim();
 
   formError.classList.add("hidden");
+
+  if (!title) {
+    showFormError("Please enter a title for this monitor.");
+    
+    return;
+  }
 
   if (!url) {
     showFormError("Please enter a health endpoint URL.");
@@ -394,7 +408,7 @@ monitorForm.addEventListener("submit", async (event) => {
   let interval;
 
   const sliderIndex = Number(intervalSlider.value),
-   selectedOption = intervalOptions[sliderIndex];
+    selectedOption = intervalOptions[sliderIndex];
 
   if (selectedOption.custom) {
     interval = getCustomIntervalSeconds();
@@ -421,6 +435,7 @@ monitorForm.addEventListener("submit", async (event) => {
       },
 
       body: JSON.stringify({
+        title,
         url,
         interval,
       }),

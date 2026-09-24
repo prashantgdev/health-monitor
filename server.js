@@ -12,6 +12,7 @@ const monitors = new Map();
 function serializeMonitor(monitor) {
   return {
     id: monitor.id,
+    title: monitor.title,
     url: monitor.url,
     interval: monitor.interval,
     status: monitor.status,
@@ -58,7 +59,13 @@ app.get("/api/monitors", (req, res) => {
 });
 
 app.post("/api/monitors", (req, res) => {
-  const { url, interval } = req.body;
+  const { title, url, interval } = req.body;
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({
+      error: "Monitor title is required."
+    });
+  }
 
   if (!url) {
     return res.status(400).json({
@@ -102,6 +109,7 @@ app.post("/api/monitors", (req, res) => {
 
   const monitor = {
     id: crypto.randomUUID(),
+    title: title.trim(),
     url: parsedUrl.toString(),
     interval: intervalSeconds,
     status: "checking",

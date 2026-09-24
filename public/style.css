@@ -470,8 +470,20 @@ button {
   flex: 1;
 }
 
-.monitor-url {
+.monitor-main .monitor-data {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.monitor-title {
   font-size: 13px;
+  margin: 0;
+  margin-bottom: -6px;
+}
+
+.monitor-url {
+  font-size: 11.5px;
 
   font-weight: 600;
 
@@ -490,6 +502,16 @@ button {
   color: var(--muted);
 
   font-size: 10px;
+}
+
+.monitor-meta div {
+  display: flex;
+
+  flex-wrap: wrap;
+  
+  gap: 25px;
+  
+  align-items: center;
 }
 
 .monitor-meta span {
@@ -1026,6 +1048,10 @@ button {
     gap: 11px;
   }
 
+  .monitor-main .monitor-data {
+    display: grid;
+  }
+
   .monitor-url {
     font-size: 12px;
 
@@ -1168,6 +1194,10 @@ button {
   .monitor-meta {
     flex-direction: column;
     gap: 3px;
+  }
+
+  .monitor-meta span {
+    width: 25%;
   }
 
   .delete-button {
