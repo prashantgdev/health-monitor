@@ -1225,3 +1225,93 @@ button {
     width: 100%;
   }
 }
+
+.endpoint-menu-button {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+
+  color: var(--muted);
+  font-size: 20px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.endpoint-menu-button:hover,
+.endpoint-menu-button:focus-visible {
+  background: #f0f1f3;
+  color: var(--text);
+  outline: none;
+}
+
+.endpoint-context-menu {
+  position: fixed;
+  z-index: 1000;
+
+  width: 190px;
+  padding: 5px;
+
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.06);
+
+  transform-origin: top right;
+}
+
+.endpoint-context-menu.hidden {
+  display: none;
+}
+
+.context-menu-item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+
+  padding: 9px 10px;
+
+  border: 0;
+  border-radius: 6px;
+
+  background: transparent;
+  color: var(--text);
+
+  font: inherit;
+  font-size: 12px;
+  text-align: left;
+
+  cursor: pointer;
+}
+
+.context-menu-item:hover,
+.context-menu-item:focus-visible {
+  background: #f3f4f6;
+  outline: none;
+}
+
+.context-menu-item.danger {
+  color: #c62828;
+}
+
+.context-menu-item.danger:hover,
+.context-menu-item.danger:focus-visible {
+  background: #fff1f1;
+}
+
+.context-menu-divider {
+  height: 1px;
+  margin: 4px 5px;
+  background: var(--border);
+}

@@ -362,11 +362,14 @@ function createMonitorHtml(monitor) {
 
 
       <button
-        class="delete-button"
-        title="Delete endpoint"
-        onclick="deleteMonitor('${monitor.id}')"
+        class="endpoint-menu-button"
+        type="button"
+        aria-label="Endpoint options"
+        aria-haspopup="menu"
+        aria-expanded="false"
+        data-endpoint-id="${monitor.id}"
       >
-        ×
+        ⋮
       </button>
 
     </div>
@@ -387,7 +390,7 @@ monitorForm.addEventListener("submit", async (event) => {
 
   if (!title) {
     showFormError("Please enter a title for this monitor.");
-    
+
     return;
   }
 
@@ -498,6 +501,120 @@ refreshButton.addEventListener("click", async () => {
   refreshButton.disabled = false;
   refreshButton.textContent = "↻ Refresh";
 });
+
+const endpointContextMenu = document.getElementById("endpointContextMenu");
+
+let contextMenuEndpointId = null;
+
+function closeEndpointContextMenu() {
+  endpointContextMenu.classList.add("hidden");
+  contextMenuEndpointId = null;
+}
+
+function openEndpointContextMenu(menuButton, endpointId) {
+  contextMenuEndpointId = endpointId;
+
+  const buttonRect = menuButton.getBoundingClientRect();
+
+  endpointContextMenu.classList.toggle("hidden");
+
+  const menuWidth = endpointContextMenu.offsetWidth;
+
+  const menuHeight = endpointContextMenu.offsetHeight;
+
+  let left = buttonRect.right - menuWidth;
+
+  let top = buttonRect.bottom + 6;
+
+  // Keep inside viewport horizontally.
+  left = Math.max(8, Math.min(left, window.innerWidth - menuWidth - 8));
+
+  // Open upward if there isn't enough space below.
+  if (top + menuHeight > window.innerHeight - 8) {
+    top = buttonRect.top - menuHeight - 6;
+  }
+
+  top = Math.max(8, Math.min(top, window.innerHeight - menuHeight - 8));
+
+  endpointContextMenu.style.left = `${left}px`;
+
+  endpointContextMenu.style.top = `${top}px`;
+}
+
+endpointList.addEventListener("click", (event) => {
+  const menuButton = event.target.closest(".endpoint-menu-button");
+
+  if (!menuButton) {
+    return;
+  }
+
+  event.stopPropagation();
+
+  openEndpointContextMenu(menuButton, menuButton.dataset.endpointId);
+});
+
+function handleEditEndpoint(endpointId) {
+  console.log("Edit endpoint:", endpointId);
+
+  // Open your edit modal here later.
+}
+
+function handleCheckEndpoint(endpointId) {
+  console.log("Check endpoint:", endpointId);
+
+  // Add manual check logic here later.
+}
+
+endpointContextMenu.addEventListener("click", async (event) => {
+  const actionButton = event.target.closest(".context-menu-item");
+
+  if (!actionButton) {
+    return;
+  }
+
+  const action = actionButton.dataset.action;
+
+  const endpointId = contextMenuEndpointId;
+
+  closeEndpointContextMenu();
+
+  if (!endpointId) {
+    return;
+  }
+
+  switch (action) {
+    case "edit":
+      handleEditEndpoint(endpointId);
+      break;
+
+    case "check":
+      handleCheckEndpoint(endpointId);
+      break;
+
+    case "delete":
+      deleteMonitor(endpointId);
+      break;
+  }
+});
+
+document.addEventListener("click", (event) => {
+  if (
+    !event.target.closest(".endpoint-context-menu") &&
+    !event.target.closest(".endpoint-menu-button")
+  ) {
+    closeEndpointContextMenu();
+  }
+});
+
+window.addEventListener("resize", () => closeEndpointContextMenu());
+
+window.addEventListener(
+  "scroll",
+  () => {
+    closeEndpointContextMenu();
+  },
+  true,
+);
 
 // ---------------------------------------------------------
 // Initial load
