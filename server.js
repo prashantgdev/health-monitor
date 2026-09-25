@@ -19,7 +19,7 @@ function serializeMonitor(monitor) {
     statusCode: monitor.statusCode,
     responseTime: monitor.responseTime,
     lastChecked: monitor.lastChecked,
-    error: monitor.error
+    error: monitor.error,
   };
 }
 
@@ -29,7 +29,7 @@ async function checkMonitor(monitor) {
   try {
     const response = await fetch(monitor.url, {
       method: "GET",
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(10000),
     });
 
     monitor.statusCode = response.status;
@@ -63,13 +63,13 @@ app.post("/api/monitors", (req, res) => {
 
   if (!title || !title.trim()) {
     return res.status(400).json({
-      error: "Monitor title is required."
+      error: "Monitor title is required.",
     });
   }
 
   if (!url) {
     return res.status(400).json({
-      error: "Health endpoint URL is required."
+      error: "Health endpoint URL is required.",
     });
   }
 
@@ -79,13 +79,13 @@ app.post("/api/monitors", (req, res) => {
     parsedUrl = new URL(url);
   } catch {
     return res.status(400).json({
-      error: "Please enter a valid URL."
+      error: "Please enter a valid URL.",
     });
   }
 
   if (!["http:", "https:"].includes(parsedUrl.protocol)) {
     return res.status(400).json({
-      error: "Only HTTP and HTTPS URLs are supported."
+      error: "Only HTTP and HTTPS URLs are supported.",
     });
   }
 
@@ -93,17 +93,17 @@ app.post("/api/monitors", (req, res) => {
 
   if (!Number.isInteger(intervalSeconds) || intervalSeconds < 10) {
     return res.status(400).json({
-      error: "Interval must be at least 10 seconds."
+      error: "Interval must be at least 10 seconds.",
     });
   }
 
   const duplicate = [...monitors.values()].some(
-    monitor => monitor.url === parsedUrl.toString()
+    (monitor) => monitor.url === parsedUrl.toString(),
   );
 
   if (duplicate) {
     return res.status(409).json({
-      error: "This endpoint is already being monitored."
+      error: "This endpoint is already being monitored.",
     });
   }
 
@@ -117,7 +117,7 @@ app.post("/api/monitors", (req, res) => {
     responseTime: null,
     lastChecked: null,
     error: null,
-    timer: null
+    timer: null,
   };
 
   monitors.set(monitor.id, monitor);
@@ -131,7 +131,7 @@ app.delete("/api/monitors/:id", (req, res) => {
 
   if (!monitor) {
     return res.status(404).json({
-      error: "Monitor not found."
+      error: "Monitor not found.",
     });
   }
 
@@ -139,7 +139,7 @@ app.delete("/api/monitors/:id", (req, res) => {
   monitors.delete(req.params.id);
 
   res.json({
-    success: true
+    success: true,
   });
 });
 

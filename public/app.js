@@ -12,7 +12,6 @@ const endpointList = document.getElementById("endpointList"),
   titleInput = document.getElementById("title"),
   urlInput = document.getElementById("url"),
   formError = document.getElementById("formError"),
-  refreshButton = document.getElementById("refreshButton"),
   // ---------------------------------------------------------
   // Interval picker
   // --------------------------------------------------------
@@ -137,11 +136,10 @@ intervalSlider.addEventListener("input", updateIntervalSlider);
 // Custom interval
 // ---------------------------------------------------------
 
-function getCustomIntervalSeconds() {
+function getCustomInterval() {
   const value = Number(customIntervalValue.value);
 
   if (!Number.isInteger(value) || value < 1) return null;
-  if (customIntervalUnit.value === "seconds") return value;
   if (customIntervalUnit.value === "minutes") return value * 60;
   if (customIntervalUnit.value === "hours") return value * 3600;
 
@@ -149,7 +147,7 @@ function getCustomIntervalSeconds() {
 }
 
 customIntervalValue.addEventListener("input", () => {
-  const value = getCustomIntervalSeconds();
+  const value = getCustomInterval();
 
   if (value !== null) {
     selectedInterval = value;
@@ -158,12 +156,7 @@ customIntervalValue.addEventListener("input", () => {
 });
 
 customIntervalUnit.addEventListener("change", () => {
-  // Seconds require a minimum of 10.
-  // Minutes and hours can start from 1.
-  if (customIntervalUnit.value === "seconds") customIntervalValue.min = "10";
-  else customIntervalValue.min = "1";
-
-  const value = getCustomIntervalSeconds();
+  const value = getCustomInterval();
 
   if (value !== null) {
     selectedInterval = value;
@@ -414,16 +407,10 @@ monitorForm.addEventListener("submit", async (event) => {
     selectedOption = intervalOptions[sliderIndex];
 
   if (selectedOption.custom) {
-    interval = getCustomIntervalSeconds();
+    interval = getCustomInterval();
 
     if (interval === null) {
       showFormError("Please enter a valid custom interval.");
-
-      return;
-    }
-
-    if (interval < 10) {
-      showFormError("Custom interval must be at least 10 seconds.");
 
       return;
     }
@@ -487,20 +474,6 @@ async function deleteMonitor(id) {
     alert("Unable to remove the endpoint.");
   }
 }
-
-// ---------------------------------------------------------
-// Refresh
-// ---------------------------------------------------------
-
-refreshButton.addEventListener("click", async () => {
-  refreshButton.disabled = true;
-  refreshButton.textContent = "Refreshing...";
-
-  await loadMonitors();
-
-  refreshButton.disabled = false;
-  refreshButton.textContent = "↻ Refresh";
-});
 
 const endpointContextMenu = document.getElementById("endpointContextMenu");
 

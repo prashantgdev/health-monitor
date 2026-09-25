@@ -508,9 +508,9 @@ button {
   display: flex;
 
   flex-wrap: wrap;
-  
+
   gap: 25px;
-  
+
   align-items: center;
 }
 
@@ -1036,10 +1036,6 @@ button {
 
   .section-header {
     padding: 16px;
-  }
-
-  .section-header .secondary-button {
-    flex-shrink: 0;
   }
 
   .monitor {
