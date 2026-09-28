@@ -349,6 +349,7 @@ function createMonitorHtml(monitor) {
 
       <span
         class="status-badge ${status}"
+        data-status-badge="${monitor.id}"
       >
         ${getStatusText(monitor.status)}
       </span>
@@ -532,82 +533,49 @@ function handleEditEndpoint(endpointId) {
   // Open your edit modal here later.
 }
 
-// async function handleCheckEndpoint(endpointId) {
-//   try {
-//     const response = await fetch(
-//       `/api/monitors/${endpointId}/check`,
-//       {
-//         method: "POST",
-//       },
-//     );
-
-//     const data = await response.json();
-
-//     if (!response.ok) {
-//       throw new Error(
-//         data.error || "Failed to check endpoint.",
-//       );
-//     }
-
-//     // Refresh the endpoint cards so the new
-//     // status, response time, etc. are visible.
-//     await loadMonitors();
-//   } catch (error) {
-//     console.error(
-//       "Check now failed:",
-//       error,
-//     );
-
-//     showToast(
-//       error.message ||
-//         "Failed to check endpoint.",
-//     );
-//   }
-// }
 async function handleCheckEndpoint(endpointId) {
-  const menuItem =
-    endpointContextMenu.querySelector(
-      '[data-action="check"]',
-    );
-
-  if (menuItem) {
-    menuItem.disabled = true;
-    menuItem.textContent = "Checking...";
-  }
+  // Immediately show Checking...
+  updateStatusBadge(endpointId, "checking");
 
   try {
-    const response = await fetch(
-      `/api/monitors/${endpointId}/check`,
-      {
-        method: "POST",
-      },
-    );
+    const response = await fetch(`/api/monitors/${endpointId}/check`, {
+      method: "POST",
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(
-        data.error || "Failed to check endpoint.",
-      );
+      throw new Error(data.error || "Failed to check endpoint.");
     }
 
+    // Use the status returned by the monitor API.
+    updateStatusBadge(endpointId, data.status);
+
+    // Refresh the rest of the monitor data
+    // such as response time and last checked.
     await loadMonitors();
   } catch (error) {
-    console.error(
-      "Check now failed:",
-      error,
-    );
+    console.error("Check now failed:", error);
 
-    showToast(
-      error.message ||
-        "Failed to check endpoint.",
-    );
-  } finally {
-    if (menuItem) {
-      menuItem.disabled = false;
-      menuItem.textContent = "Check now";
-    }
+    // Restore the actual state from the API
+    // by refreshing the monitors.
+    await loadMonitors();
+
+    alert(error.message || "Failed to check endpoint.");
   }
+}
+
+function updateStatusBadge(endpointId, status) {
+  const badge = document.querySelector(`[data-status-badge="${endpointId}"]`);
+  const statusClass = status === "up" ? "up" : status === "down" ? "down" : "checking";
+
+  if (!badge) return;
+
+  badge.classList.remove("checking", "healthy", "down");
+
+  badge.classList.add(statusClass);
+
+  badge.textContent = getStatusText(status);
 }
 
 endpointContextMenu.addEventListener("click", async (event) => {
