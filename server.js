@@ -126,6 +126,28 @@ app.post("/api/monitors", (req, res) => {
   res.status(201).json(serializeMonitor(monitor));
 });
 
+app.post("/api/monitors/:id/check", async (req, res) => {
+  const monitor = monitors.get(req.params.id);
+
+  if (!monitor) {
+    return res.status(404).json({
+      error: "Monitor not found."
+    });
+  }
+
+  try {
+    await checkMonitor(monitor);
+
+    res.json(serializeMonitor(monitor));
+  } catch (error) {
+    console.error("Manual monitor check failed:", error);
+
+    res.status(500).json({
+      error: "Failed to check monitor."
+    });
+  }
+});
+
 app.delete("/api/monitors/:id", (req, res) => {
   const monitor = monitors.get(req.params.id);
 

@@ -532,10 +532,82 @@ function handleEditEndpoint(endpointId) {
   // Open your edit modal here later.
 }
 
-function handleCheckEndpoint(endpointId) {
-  console.log("Check endpoint:", endpointId);
+// async function handleCheckEndpoint(endpointId) {
+//   try {
+//     const response = await fetch(
+//       `/api/monitors/${endpointId}/check`,
+//       {
+//         method: "POST",
+//       },
+//     );
 
-  // Add manual check logic here later.
+//     const data = await response.json();
+
+//     if (!response.ok) {
+//       throw new Error(
+//         data.error || "Failed to check endpoint.",
+//       );
+//     }
+
+//     // Refresh the endpoint cards so the new
+//     // status, response time, etc. are visible.
+//     await loadMonitors();
+//   } catch (error) {
+//     console.error(
+//       "Check now failed:",
+//       error,
+//     );
+
+//     showToast(
+//       error.message ||
+//         "Failed to check endpoint.",
+//     );
+//   }
+// }
+async function handleCheckEndpoint(endpointId) {
+  const menuItem =
+    endpointContextMenu.querySelector(
+      '[data-action="check"]',
+    );
+
+  if (menuItem) {
+    menuItem.disabled = true;
+    menuItem.textContent = "Checking...";
+  }
+
+  try {
+    const response = await fetch(
+      `/api/monitors/${endpointId}/check`,
+      {
+        method: "POST",
+      },
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || "Failed to check endpoint.",
+      );
+    }
+
+    await loadMonitors();
+  } catch (error) {
+    console.error(
+      "Check now failed:",
+      error,
+    );
+
+    showToast(
+      error.message ||
+        "Failed to check endpoint.",
+    );
+  } finally {
+    if (menuItem) {
+      menuItem.disabled = false;
+      menuItem.textContent = "Check now";
+    }
+  }
 }
 
 endpointContextMenu.addEventListener("click", async (event) => {
