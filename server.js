@@ -148,6 +148,90 @@ app.post("/api/monitors/:id/check", async (req, res) => {
   }
 });
 
+app.put("/api/monitors/:id", async (req, res) => {
+  const monitor = monitors.get(req.params.id);
+
+  if (!monitor) {
+    return res.status(404).json({
+      error: "Monitor not found."
+    });
+  }
+
+  const { title, url, interval } = req.body;
+
+  if (!title || !title.trim()) {
+    return res.status(400).json({
+      error: "Monitor title is required."
+    });
+  }
+
+  if (!url) {
+    return res.status(400).json({
+      error: "Health endpoint URL is required."
+    });
+  }
+
+  let parsedUrl;
+
+  try {
+    parsedUrl = new URL(url);
+  } catch {
+    return res.status(400).json({
+      error: "Please enter a valid URL."
+    });
+  }
+
+  if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+    return res.status(400).json({
+      error: "Only HTTP and HTTPS URLs are supported."
+    });
+  }
+
+  const intervalSeconds = Number(interval);
+
+  if (
+    !Number.isInteger(intervalSeconds) ||
+    intervalSeconds < 10
+  ) {
+    return res.status(400).json({
+      error: "Interval must be at least 10 seconds."
+    });
+  }
+
+  const normalizedUrl = parsedUrl.toString();
+
+  // Ignore the current monitor when checking duplicates.
+  const duplicate = [...monitors.values()].some(
+    existingMonitor =>
+      existingMonitor.id !== monitor.id &&
+      existingMonitor.url === normalizedUrl
+  );
+
+  if (duplicate) {
+    return res.status(409).json({
+      error: "This endpoint is already being monitored."
+    });
+  }
+
+  // Stop the old timer.
+  clearInterval(monitor.timer);
+
+  // Update monitor details.
+  monitor.title = title.trim();
+  monitor.url = normalizedUrl;
+  monitor.interval = intervalSeconds;
+  monitor.status = "checking";
+  monitor.statusCode = null;
+  monitor.responseTime = null;
+  monitor.lastChecked = null;
+  monitor.error = null;
+
+  // Restart monitoring using the new settings.
+  startMonitor(monitor);
+
+  res.json(serializeMonitor(monitor));
+});
+
 app.delete("/api/monitors/:id", (req, res) => {
   const monitor = monitors.get(req.params.id);
 

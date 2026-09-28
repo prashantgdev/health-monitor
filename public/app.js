@@ -66,7 +66,12 @@ const endpointList = document.getElementById("endpointList"),
       custom: true,
       label: "Custom",
     },
-  ];
+  ],
+  modalTitle = document.getElementById("modalTitle"),
+  monitorSubmitButton = document.getElementById("monitorSubmitButton");
+
+let editingMonitorId = null,
+  originalMonitorValues = null;
 
 // Hidden value submitted to server
 let selectedInterval = 300;
@@ -76,27 +81,54 @@ let selectedInterval = 300;
 // ---------------------------------------------------------
 
 function openModal() {
-  modal.classList.remove("hidden");
+  editingMonitorId = null;
 
-  setTimeout(() => {
-    urlInput.focus();
-  }, 50);
-}
+  modalTitle.textContent = "Add monitor";
+  monitorSubmitButton.textContent = "Add monitor";
 
-function closeModalWindow() {
-  modal.classList.add("hidden");
   monitorForm.reset();
+
   customInterval.classList.add("hidden");
 
   customIntervalValue.value = "";
   customIntervalUnit.value = "minutes";
+
   intervalSlider.value = 3;
   selectedInterval = 300;
 
   updateIntervalSlider();
-  formError.classList.add("hidden");
 
+  formError.classList.add("hidden");
   formError.textContent = "";
+
+  modal.classList.remove("hidden");
+
+  setTimeout(() => urlInput.focus(), 50);
+}
+
+function closeModalWindow() {
+  modal.classList.add("hidden");
+
+  editingMonitorId = null;
+  originalMonitorValues = null;
+
+  monitorForm.reset();
+
+  customInterval.classList.add("hidden");
+
+  customIntervalValue.value = "";
+  customIntervalUnit.value = "minutes";
+
+  intervalSlider.value = 3;
+  selectedInterval = 300;
+
+  updateIntervalSlider();
+
+  formError.classList.add("hidden");
+  formError.textContent = "";
+
+  modalTitle.textContent = "Add monitor";
+  monitorSubmitButton.textContent = "Add monitor";
 }
 
 addButton.addEventListener("click", openModal);
@@ -380,8 +412,6 @@ monitorForm.addEventListener("submit", async (event) => {
   const title = titleInput.value.trim(),
     url = urlInput.value.trim();
 
-  formError.classList.add("hidden");
-
   if (!title) {
     showFormError("Please enter a title for this monitor.");
 
@@ -394,20 +424,15 @@ monitorForm.addEventListener("submit", async (event) => {
     return;
   }
 
-  try {
-    new URL(url);
-  } catch {
-    showFormError("Please enter a valid URL.");
+  // Get interval from the slider/custom editor
+  // every single time the form is submitted.
+  const sliderIndex = Number(intervalSlider.value);
 
-    return;
-  }
+  const selectedOption = intervalOptions[sliderIndex];
 
   let interval;
 
-  const sliderIndex = Number(intervalSlider.value),
-    selectedOption = intervalOptions[sliderIndex];
-
-  if (selectedOption.custom) {
+  if (selectedOption?.custom) {
     interval = getCustomInterval();
 
     if (interval === null) {
@@ -415,16 +440,42 @@ monitorForm.addEventListener("submit", async (event) => {
 
       return;
     }
-  } else interval = selectedOption.seconds;
+  } else interval = selectedOption?.seconds;
+
+  if (!Number.isInteger(interval)) {
+    showFormError("Please select a valid check interval.");
+
+    return;
+  }
+
+  const isEditing = Boolean(editingMonitorId);
+
+  if (
+    isEditing &&
+    originalMonitorValues &&
+    title === originalMonitorValues.title &&
+    url === originalMonitorValues.url &&
+    interval === originalMonitorValues.interval
+  ) {
+    showFormError("No changes were made to this monitor.");
+
+    return;
+  }
+
+  const requestUrl = isEditing
+    ? `/api/monitors/${editingMonitorId}`
+    : "/api/monitors";
+
+  const requestMethod = isEditing ? "PUT" : "POST";
 
   try {
-    const response = await fetch("/api/monitors", {
-      method: "POST",
+    monitorSubmitButton.disabled = true;
 
+    const response = await fetch(requestUrl, {
+      method: requestMethod,
       headers: {
         "Content-Type": "application/json",
       },
-
       body: JSON.stringify({
         title,
         url,
@@ -432,19 +483,18 @@ monitorForm.addEventListener("submit", async (event) => {
       }),
     });
 
-    const result = await response.json();
+    const data = await response.json();
 
     if (!response.ok) {
-      showFormError(result.error || "Unable to add endpoint.");
-
-      return;
+      throw new Error(data.error || "Failed to save monitor.");
     }
 
-    closeModalWindow();
-
     await loadMonitors();
-  } catch {
-    showFormError("Could not connect to the monitor server.");
+    closeModalWindow();
+  } catch (error) {
+    showFormError(error.message || "Failed to save monitor.");
+  } finally {
+    monitorSubmitButton.disabled = false;
   }
 });
 
@@ -527,10 +577,82 @@ endpointList.addEventListener("click", (event) => {
   openEndpointContextMenu(menuButton, menuButton.dataset.endpointId);
 });
 
-function handleEditEndpoint(endpointId) {
-  console.log("Edit endpoint:", endpointId);
+function setIntervalEditor(seconds) {
+  const fixedIndex = intervalOptions.findIndex(
+    (option) => !option.custom && option.seconds === seconds,
+  );
 
-  // Open your edit modal here later.
+  if (fixedIndex !== -1) {
+    intervalSlider.value = fixedIndex;
+
+    customInterval.classList.add("hidden");
+
+    customIntervalValue.value = "";
+
+    updateIntervalSlider();
+
+    return;
+  }
+
+  // Anything that isn't one of the predefined
+  // intervals becomes Custom.
+
+  intervalSlider.value = intervalOptions.length - 1;
+
+  customInterval.classList.remove("hidden");
+
+  if (seconds % 3600 === 0) {
+    customIntervalValue.value = seconds / 3600;
+    customIntervalUnit.value = "hours";
+  } else {
+    customIntervalValue.value = seconds / 60;
+    customIntervalUnit.value = "minutes";
+  }
+
+  intervalDisplay.textContent = formatInterval(seconds);
+
+  intervalSlider.style.setProperty("--slider-progress", "100%");
+
+  selectedInterval = seconds;
+}
+
+async function handleEditEndpoint(endpointId) {
+  try {
+    const response = await fetch("/api/monitors"),
+      monitors = await response.json();
+
+    if (!response.ok)
+      throw new Error(monitors.error || "Failed to load endpoint.");
+
+    const monitor = monitors.find((item) => item.id === endpointId);
+
+    if (!monitor) throw new Error("Endpoint could not be found.");
+
+    editingMonitorId = endpointId;
+
+    originalMonitorValues = {
+      title: monitor.title || "",
+      url: monitor.url || "",
+      interval: monitor.interval,
+    };
+
+    // Populate the form.
+    titleInput.value = monitor.title || "";
+    urlInput.value = monitor.url || "";
+
+    setIntervalEditor(monitor.interval);
+
+    // Change modal into edit mode.
+    modalTitle.textContent = "Edit monitor";
+    monitorSubmitButton.textContent = "Save changes";
+
+    formError.classList.add("hidden");
+    formError.textContent = "";
+
+    modal.classList.remove("hidden");
+  } catch (error) {
+    alert(error.message || "Failed to load endpoint.");
+  }
 }
 
 async function handleCheckEndpoint(endpointId) {
@@ -555,8 +677,6 @@ async function handleCheckEndpoint(endpointId) {
     // such as response time and last checked.
     await loadMonitors();
   } catch (error) {
-    console.error("Check now failed:", error);
-
     // Restore the actual state from the API
     // by refreshing the monitors.
     await loadMonitors();
@@ -567,7 +687,8 @@ async function handleCheckEndpoint(endpointId) {
 
 function updateStatusBadge(endpointId, status) {
   const badge = document.querySelector(`[data-status-badge="${endpointId}"]`);
-  const statusClass = status === "up" ? "up" : status === "down" ? "down" : "checking";
+  const statusClass =
+    status === "up" ? "up" : status === "down" ? "down" : "checking";
 
   if (!badge) return;
 
